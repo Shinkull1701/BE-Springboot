@@ -1,20 +1,25 @@
 package com.example.demo2.controller;
 
 import com.example.demo2.Service.UserService;
-import com.example.demo2.request.ApiResponse;
-import com.example.demo2.request.UserCreationRequest;
-import com.example.demo2.model.User;
-import com.example.demo2.request.UserUpdateRequest;
+import com.example.demo2.dto.request.ApiResponse;
+import com.example.demo2.dto.request.UserCreationRequest;
+import com.example.demo2.Entity.User;
+import com.example.demo2.dto.request.UserUpdateRequest;
+import com.example.demo2.dto.response.UserRespone;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
-    @Autowired
-    private UserService userService;
+
+   UserService userService;
 
     @PostMapping("users")
     ApiResponse<User> creatUser(@RequestBody @Valid UserCreationRequest  request){
@@ -28,11 +33,11 @@ public class UserController {
         return userService.getUser();
     }
     @GetMapping("{userid}")
-    User getUser(@PathVariable Long userid){
+    UserRespone getUser(@PathVariable Long userid){
         return userService.getUser(userid);
     }
     @PutMapping("{userid}")
-    User updateUser(@PathVariable Long userid, @RequestBody UserUpdateRequest request){
+    UserRespone updateUser(@PathVariable Long userid, @RequestBody UserUpdateRequest request){
         return userService.updateUser(userid, request);
     };
     @DeleteMapping("{userid}")
