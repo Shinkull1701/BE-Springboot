@@ -13,6 +13,10 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -27,6 +32,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Builder
+@Slf4j
 public class UserService {
 
     UserRepository userRepository;
@@ -39,8 +45,9 @@ public class UserService {
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         HashSet<String> roles = new HashSet<>();
-        roles.add(Role.USER.name());
-        user.setRoles(roles);
+        //roles.add(Role.USER.name());
+
+        //user.setRoles(roles);
         return userRepository.save(user);
     };
     public UserRespone updateUser(Long userId, UserUpdateRequest request){
@@ -51,13 +58,15 @@ public class UserService {
 
         return userMapper.toUserRespone(userRepository.save(user));
     };
+        @PreAuthorize("hasRole('ADMIN')")
         public List<UserRespone> getUsers() {
+            log.info("In method getUsers");
         return userRepository.findAll().stream()
-                .map(userMapper::toUserRespone)
-                .collect(Collectors.toList());
+                .map(userMapper::toUserRespone).toList();
     }
-
+    @PostAuthorize("returnObject.username==authentication.name")
     public UserRespone getUser(Long userId){
+            log.info("In method getUserbyId");
         return  userMapper.toUserRespone(userRepository.findById(userId)
                 .orElseThrow(()->new RuntimeException("User not found!")));
     }
@@ -65,4 +74,11 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
+    public UserRespone getMyinfo(){
+       var context = SecurityContextHolder.getContext();
+       String name = context.getAuthentication().getName();
+       User user = userRepository.findByUsername(name).orElseThrow(()
+               -> new AppException(ErrorCode.USER_NOT_EXISTED));
+       return  userMapper.toUserRespone(user);
+    }
 }

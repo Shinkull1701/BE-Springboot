@@ -22,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Builder
+@RequestMapping("users")
 public class UserController {
 
    UserService userService;
@@ -45,20 +46,36 @@ public class UserController {
                 .build();
     }
     @GetMapping("{userid}")
-    UserRespone getUser(@PathVariable Long userid){
-        return userService.getUser(userid);
+    ApiResponse<UserRespone> getUser(@PathVariable Long userId){
+
+         return ApiResponse.<UserRespone>builder()
+                .result(userService.getUser(userId))
+                .build();
+    }
+    @GetMapping("/myInfo")
+    ApiResponse<UserRespone> getUser(){
+
+        return ApiResponse.<UserRespone>builder()
+                .result(userService.getMyinfo())
+                .build();
     }
 
+
     @PutMapping("{userid}")
-    UserRespone updateUser(@PathVariable Long userid, @RequestBody UserUpdateRequest request){
-        return userService.updateUser(userid, request);
+    ApiResponse<UserRespone> updateUser(@PathVariable Long userid, @RequestBody UserUpdateRequest request){
+        return ApiResponse.<UserRespone>builder()
+                .result(userService.updateUser(userid,request))
+                .build();
+
     };
 
 
     @DeleteMapping("{userid}")
-    String deleteUser(@PathVariable Long userid){
+    ApiResponse<String> deleteUser(@PathVariable Long userid){
         userService.deleteUser(userid);
-        return "User has been deleted";
+        return ApiResponse.<String>builder()
+                .result("User has been delete")
+                .build();
     };
 
 }
